@@ -1,0 +1,8 @@
+%strong Checkout
+
+= form_for :reserved_locker, url: reserved_lockers_path do |f|
+  %p
+    Select a locker size:
+    = f.select :size, :options => ['Small', 'Regular', 'Large'], :selected => 'Small'
+  %p
+    = f.submit 'Reserve'
