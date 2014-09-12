@@ -1,6 +1,23 @@
-%strong
-  Reservation For
-  = @reserved_locker.size
+:javascript
+  function printDiv(divName) {
+   alert(divName);
+   var printContents = document.getElementById(divName).innerHTML;
+   w=window.open();
+   w.document.write(printContents);
+   w.print();
+   w.close();
+  }
+
+#print_content
+  %strong
+    Reservation For
+    = @reserved_locker.number
   Locker
-%strong
-  = @reserved_locker.number
+  %strong
+    = @reserved_locker.size
+
+%p
+%input{:type=>'button', :onclick=>"printDiv('print_content')", :value=>'Print Reservation'}
+
+.menu
+  = render 'reserved_lockers/menu'

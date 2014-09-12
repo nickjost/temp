@@ -5,25 +5,42 @@ class ReservedLockersController < ApplicationController
 
   def create
     params = reserved_locker_params
-    @reserved_locker = ReservedLocker.new(params)
-
 
     # Locker reservations are segregated 1-1000 small, 1001-2000 regular, 2001-3000 large
-    prev = 0 if (params[:reserved_locker][:size] == 'Small')
-    prev = 1000 if (params[:reserved_locker][:size] == 'Regular')
-    prev = 2000 if (params[:reserved_locker][:size] == 'Large')
+    # start looking for gaps
+    prev = -1 + start =  1 if (params[:size] == 'Small')
+    prev = -1 + start = 1001 if (params[:size] == 'Regular')
+    prev = -1 + start = 2001 if (params[:size] == 'Large')
     found = false
-    ReservedLocker.where(size: params[:reserved_locker][:size]).find_each { |locker|
-      unless ((locker.number - 1) == prev)
+    lockers = ReservedLocker.where(size: params[:size]).order(:number)
+    lockers.find_each { |locker|
+      unless (((locker.number - 1) == prev) || (locker.number == start))
         found = true
-        params[:reserved_locker][:number] = locker.number - 1
+        params[:number] = locker.number - 1
         break
       end
-
+      prev = locker.number
     }
 
-    @reserved_locker.save
-    redirect_to @reserved_locker
+    # couldn't find a valid low number or gap
+    unless found
+      # it could be that no reservations were found if so just pick the lowest possible (which is next)
+      if (lockers.any?)
+        params[:number] = prev + 1
+      else
+        # Just starting
+        params[:number] = start
+      end
+    end
+
+    @reserved_locker = ReservedLocker.new(params)
+    # Only save if we haven't run out of lockers (3000) and if we did save perform a redirection...this happens
+    # because of the left evaluating first and the && short circuiting on failure
+    if ((params[:number].nil? || (!(params[:number] > 3000))) &&  @reserved_locker.save)
+      redirect_to @reserved_locker
+    else
+      redirect_to action: 'create'
+    end
   end
 
   def show
@@ -34,8 +51,15 @@ class ReservedLockersController < ApplicationController
     @reserved_lockers = ReservedLocker.all
   end
 
+  def destroy
+    # NOTE BENE: We delete by locker number and not by ID
+    @reserved_locker = ReservedLocker.find(params[:id])
+    @reserved_locker.delete
+    redirect_to action: 'index'
+  end
+
   private
   def reserved_locker_params
-    params.require(:reserved_locker).permit(:size, :number)
+    params.require(:reserved_locker).permit(:id, :size, :number)
   end
 end

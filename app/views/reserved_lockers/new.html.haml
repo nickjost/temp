@@ -6,3 +6,6 @@
     = f.select :size, :options => ['Small', 'Regular', 'Large'], :selected => 'Small'
   %p
     = f.submit 'Reserve'
+
+.menu
+  = render 'reserved_lockers/menu'

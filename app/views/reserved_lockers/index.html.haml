@@ -1,4 +1,9 @@
 - @reserved_lockers.each do |locker|
   %p
-    = locker.size
     = locker.number
+    = locker.size
+
+    = link_to 'Release Locker', reserved_locker_path(locker), method: :delete, data: { confirm: 'Are you sure?' }
+
+.menu
+  = render 'reserved_lockers/menu'
